@@ -438,29 +438,39 @@ function footNote(){
 /* ---- EXPAND brief notes into formal report prose ---- */
 function expandBrief(title, desc, count, context){
   const clean = (desc||"").replace(/\s+/g," ").trim();
-  const who = count ? `${count} participants` : "students and staff of the college";
-  if(!clean) return "The programme was conducted as scheduled with active participation of students and faculty.";
-  // If already long (user wrote full report), keep largely as-is with light polish
-  if(clean.length > 350){
-    return clean.endsWith(".") ? clean : clean + ".";
-  }
+  const who = count ? (String(count) + " participants") : "students and staff of the college";
   const ctx = context || "institutional activity";
-  const sentences = [];
-  sentences.push(`The activity titled “${title}” was organised as part of the ${ctx} of Model Degree College, Malkangiri.`);
-  sentences.push(clean.endsWith(".") ? clean : clean + ".");
-  sentences.push(`A total of ${who} took part in the programme, reflecting active engagement of the student community.`);
-  sentences.push(`The proceedings were conducted in an orderly manner. Participants were briefed about the objectives at the outset, and the session concluded with a summary of key takeaways.`);
-  sentences.push(`Such activities contribute to the holistic development of students and strengthen the institutional culture of quality, service and academic enrichment in line with UGC and NAAC expectations.`);
-  return sentences.join(" ");
+  const t = title || "the programme";
+  const userPara = clean
+    ? (clean.endsWith(".") ? clean : clean + ".")
+    : "The programme was organised as per the approved schedule of the college.";
+
+  // Always build a full formal narrative (target >= 150 words)
+  const parts = [];
+  parts.push("The activity titled \u201c" + t + "\u201d was organised under the " + ctx + " of Model Degree College, Malkangiri, affiliated to Vikram Dev University, Odisha. The college continues to promote quality-oriented student engagement, democratic values, and community-linked learning in keeping with the expectations of the University Grants Commission and the National Assessment and Accreditation Council.");
+  parts.push(userPara);
+  parts.push("A total of " + who + " took part in the programme. Their presence reflected the active interest of the student community and the supportive role of faculty members in facilitating meaningful academic and co-curricular experiences. Attendance was recorded, and participants were oriented about the purpose and expected learning outcomes of the activity at the beginning of the session.");
+  parts.push("The proceedings were conducted in a disciplined and participatory manner. Resource inputs, discussions, and practical components, as applicable to the nature of the event, were arranged so that students could relate classroom knowledge to real-life contexts. Opportunities were provided for questions, reflection, and brief feedback from participants before the formal conclusion of the programme.");
+  parts.push("The activity is expected to strengthen soft skills, subject understanding, social responsibility, and institutional belonging among the learners. Documentation of the event\u2014including notice, attendance, photographs, and this report\u2014shall be retained in the concerned departmental or cell file for AQAR, NAAC criterion evidence, and internal quality review. Model Degree College, Malkangiri remains committed to organising such programmes regularly for the holistic development of its students.");
+
+  let text = parts.join(" ");
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  if(wordCount < 150){
+    text += " The college shall continue to encourage faculty and students to plan, implement, and review similar activities so that teaching-learning, extension, and student support remain vibrant, inclusive, and aligned with the vision of a progressive higher education institution serving the aspirational district of Malkangiri.";
+  }
+  return text;
 }
 
 function expandOutcomes(outcomes, typeLabel){
   const o = (outcomes||"").replace(/\s+/g," ").trim();
-  if(o && o.length > 80) return o.endsWith(".") ? o : o + ".";
-  if(o){
-    return `${o.endsWith(".")?o:o+"."} The learning experience is linkable to relevant Course Outcomes (COs) of the programme and supports experiential / participatory learning under the NAAC framework.`;
+  const label = typeLabel || "the activity";
+  if(o && o.split(/\s+/).filter(Boolean).length >= 40){
+    return o.endsWith(".") ? o : o + ".";
   }
-  return `Students and faculty benefited through enhanced subject understanding, interaction with external expertise or field exposure, and improved academic engagement. The outcomes are aligned with the objectives of ${typeLabel||"the activity"} and are linkable to relevant Course Outcomes (COs) of the programme.`;
+  const base = o
+    ? (o.endsWith(".") ? o : o + ".")
+    : ("Participants gained clearer understanding of the themes addressed during " + label + ".");
+  return base + " Students demonstrated improved confidence in discussion and application of concepts. The experience supports experiential and participatory learning and can be mapped to relevant Course Outcomes (COs) and Programme Outcomes (POs) of the concerned programme. Faculty members noted enhanced classroom linkage with field or expert perspectives. Overall, the activity contributed to Criterion-linked quality indicators under teaching-learning, student support, and, where applicable, extension, as prescribed in the NAAC framework for affiliated colleges.";
 }
 
 function photosHTML(images){
@@ -544,7 +554,13 @@ function buildCoordOfficial(title, date, desc, count, role, otherLabel, images){
   } else if(role==="website"){
     docTitle="WEBSITE / PUBLIC COMMUNICATION NOTE";
     criteria="Institutional transparency & stakeholder communication";
-    body=`<p class="doc-body">Model Degree College, Malkangiri organised <b>“${escapeHtml(title)}”</b> on ${escapeHtml(d)}. ${escapeHtml(clean)} ${escapeHtml(who.charAt(0).toUpperCase()+who.slice(1))} took part in the programme.</p>`;
+    body=`<div class="doc-meta"><table>
+      <tr><td>Title</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <div class="doc-sec">Report for publication</div>
+    <p class="doc-body">${escapeHtml(clean)}</p>`;
   } else if(role==="social"){
     docTitle="SOCIAL MEDIA CAPTION (FOR OFFICIAL HANDLES)";
     criteria="—";
