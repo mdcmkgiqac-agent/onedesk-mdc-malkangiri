@@ -110,6 +110,12 @@
   .thumb .rm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--stamp);color:#fff;border:none;font-size:10px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;}
   .out-photos{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;padding:0 32px 20px;}
   .out-photos img{width:72px;height:72px;object-fit:cover;border:1px solid #ccc;}
+  .doc-photos{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 8px;}
+  .doc-photo{margin:0;width:calc(50% - 6px);max-width:280px;}
+  .doc-photo img{width:100%;height:auto;max-height:200px;object-fit:cover;border:1px solid #bbb;display:block;}
+  .official-doc .doc-body{line-height:1.5;text-align:justify;}
+  .official-doc p{line-height:1.5;margin:0.6em 0;}
+  .official-doc li{line-height:1.5;}
   .sync-status{font-size:12px;margin-top:8px;}
   .sync-status.ok{color:var(--success);} .sync-status.off{color:var(--ink-soft);}
   .other-role-row{display:flex;gap:8px;margin-top:8px;align-items:center;}
@@ -223,7 +229,7 @@
       </div>
 
       <div class="mode-toggle">
-        <label><input type="radio" name="draft-mode" value="template" checked> Official template (recommended)</label>
+        <label><input type="radio" name="draft-mode" value="template" checked> Auto-expand brief → full report (recommended)</label>
         <label><input type="radio" name="draft-mode" value="api"> LLM polish (API key)</label>
       </div>
       <div id="api-key-row" style="display:none;">
@@ -241,7 +247,7 @@
       <div id="output-area">
         <div class="empty">Fill the form and generate. Reports appear here on <b>official MDC Malkangiri letterhead</b>, structured for NAAC/UGC filing.</div>
       </div>
-      <div class="disclaimer">Reports use the college’s formal letterhead style. Verify names, dates, figures and sign before filing. Keep geo-tagged photos with the hard copy for Peer Team evidence.</div>
+      <div class="disclaimer">Reports use the college’s formal letterhead style. Verify names, dates, figures and sign before filing. Keep geo-tagged photos with the hard copy for Peer Team evidence. One Desk © Dr. Debasis Pahi.</div>
     </div>
   </div>
 
@@ -425,14 +431,51 @@ function naacBox(criteriaText){
   return `<div class="doc-naac"><b>NAAC mapping:</b> ${escapeHtml(criteriaText)}</div>`;
 }
 function footNote(){
-  return `<div class="doc-foot">Generated for institutional record · Model Degree College, Malkangiri · Verify and sign before filing · Retain photographs &amp; attendance with this report<br>${escapeHtml(COLLEGE.copyright)}</div>`;
+  return `<div class="doc-foot">Generated for institutional record · Model Degree College, Malkangiri · Verify and sign before filing · Retain photographs &amp; attendance with this report</div>`;
+}
+
+
+/* ---- EXPAND brief notes into formal report prose ---- */
+function expandBrief(title, desc, count, context){
+  const clean = (desc||"").replace(/\s+/g," ").trim();
+  const who = count ? `${count} participants` : "students and staff of the college";
+  if(!clean) return "The programme was conducted as scheduled with active participation of students and faculty.";
+  // If already long (user wrote full report), keep largely as-is with light polish
+  if(clean.length > 350){
+    return clean.endsWith(".") ? clean : clean + ".";
+  }
+  const ctx = context || "institutional activity";
+  const sentences = [];
+  sentences.push(`The activity titled “${title}” was organised as part of the ${ctx} of Model Degree College, Malkangiri.`);
+  sentences.push(clean.endsWith(".") ? clean : clean + ".");
+  sentences.push(`A total of ${who} took part in the programme, reflecting active engagement of the student community.`);
+  sentences.push(`The proceedings were conducted in an orderly manner. Participants were briefed about the objectives at the outset, and the session concluded with a summary of key takeaways.`);
+  sentences.push(`Such activities contribute to the holistic development of students and strengthen the institutional culture of quality, service and academic enrichment in line with UGC and NAAC expectations.`);
+  return sentences.join(" ");
+}
+
+function expandOutcomes(outcomes, typeLabel){
+  const o = (outcomes||"").replace(/\s+/g," ").trim();
+  if(o && o.length > 80) return o.endsWith(".") ? o : o + ".";
+  if(o){
+    return `${o.endsWith(".")?o:o+"."} The learning experience is linkable to relevant Course Outcomes (COs) of the programme and supports experiential / participatory learning under the NAAC framework.`;
+  }
+  return `Students and faculty benefited through enhanced subject understanding, interaction with external expertise or field exposure, and improved academic engagement. The outcomes are aligned with the objectives of ${typeLabel||"the activity"} and are linkable to relevant Course Outcomes (COs) of the programme.`;
+}
+
+function photosHTML(images){
+  if(!images || !images.length) return "";
+  const imgs = images.map((s,i)=>`<figure class="doc-photo"><img src="${s}" alt="Event photograph ${i+1}"></figure>`).join("");
+  return `<div class="doc-sec">Photographs</div><div class="doc-photos">${imgs}</div>`;
 }
 
 /* ---- COORDINATOR TEMPLATES (letterhead) ---- */
-function buildCoordOfficial(title, date, desc, count, role, otherLabel){
+function buildCoordOfficial(title, date, desc, count, role, otherLabel, images){
   const d=fmtDate(date);
   const who=count?`${count} participants`:"students and staff";
-  const clean=(desc||"").replace(/\s+/g," ").trim();
+  const ctxMap={nss:"NSS extension programme",yrc:"Youth Red Cross programme",placement:"career and placement initiative",scholarship:"scholarship / student support initiative",sports:"sports and cultural programme",iqac:"quality assurance activity",naac:"institutional quality evidence activity",website:"institutional outreach",social:"institutional outreach",other:"college committee activity"};
+  const expanded=expandBrief(title, desc, count, ctxMap[role]||"institutional activity");
+  const clean=expanded;
   let body="", criteria="", docTitle=ROLE_META[role]?.label||role;
 
   if(role==="nss"){
@@ -445,7 +488,7 @@ function buildCoordOfficial(title, date, desc, count, role, otherLabel){
         <tr><td>Organised by</td><td>NSS Unit, Model Degree College, Malkangiri</td></tr>
         <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
       </table></div>
-      <div class="doc-sec">2. Brief Report</div>
+      <div class="doc-sec">2. Detailed Report</div>
       <p class="doc-body">${escapeHtml(clean)}</p>
       <div class="doc-sec">3. Outcome</div>
       <p class="doc-body">The activity strengthened community engagement, voluntary service and social responsibility among student volunteers, in alignment with the objectives of the National Service Scheme.</p>`;
@@ -522,6 +565,7 @@ function buildCoordOfficial(title, date, desc, count, role, otherLabel){
     ${letterheadHTML()}
     <div class="doc-title">${docTitle}</div>
     ${body}
+    ${photosHTML(images)}
     ${criteria!=="—"?naacBox(criteria):""}
     ${signBlock(coordinatorRoleLabel(role, otherLabel), COLLEGE.coordinator, COLLEGE.principalDesignation, COLLEGE.principal)}
     ${footNote()}
@@ -533,11 +577,12 @@ function buildDeptOfficial(data){
   const d=fmtDate(data.date);
   const typeLabel=DEPT_TYPE_LABEL[data.type]||"Academic Activity";
   const who=data.count?`${data.count}`:"—";
-  const clean=(data.desc||"").replace(/\s+/g," ").trim();
-  const outcomes=(data.outcomes||"").replace(/\s+/g," ").trim();
+  const clean=expandBrief(data.title, data.desc, data.count, `departmental ${typeLabel.toLowerCase()} of the Department of ${data.dept||"the college"}`);
+  const outcomes=expandOutcomes(data.outcomes, typeLabel);
   const resource=data.resource||"—";
   const venue=data.venue||"—";
   const dept=data.dept||"Department";
+  const images=data.images||[];
 
   let criteria="Criterion II (Teaching-Learning) · Criterion III (Research/Extension, if applicable) · Criterion V (Student Support)";
   if(data.type==="field_visit"||data.type==="industrial_visit"||data.type==="internship")
@@ -569,7 +614,7 @@ function buildDeptOfficial(data){
     <p class="doc-body">${escapeHtml(clean)}</p>
 
     <div class="doc-sec">4. Learning Outcomes &amp; Impact</div>
-    <p class="doc-body">${outcomes?escapeHtml(outcomes):"Students and faculty benefited through enhanced subject understanding, interaction with external expertise / field exposure, and improved academic engagement. Outcomes are linkable to relevant Course Outcomes (COs) of the programme."}</p>
+    <p class="doc-body">${escapeHtml(outcomes)}</p>
 
     <div class="doc-sec">5. Documents Retained</div>
     <ul class="doc-list">
@@ -580,6 +625,7 @@ function buildDeptOfficial(data){
       <li>This report, duly signed by HoD and Principal</li>
     </ul>
 
+    ${photosHTML(images)}
     ${naacBox(criteria)}
     ${signBlock("Head of the Department" + (dept ? " — " + dept : ""), "", COLLEGE.principalDesignation, COLLEGE.principal)}
     ${footNote()}
@@ -594,7 +640,7 @@ function buildDeptIqacNaacNotes(data){
   const iqac=`<div class="official-doc">${letterheadHTML()}
     <div class="doc-title">IQAC LOG ENTRY — DEPARTMENTAL ACTIVITY</div>
     <p class="doc-body">The Department of <b>${escapeHtml(data.dept)}</b> conducted a <b>${escapeHtml(typeLabel)}</b> titled “${escapeHtml(data.title)}” on <b>${escapeHtml(d)}</b>
-    ${data.count?` with ${escapeHtml(String(data.count))} participants`:""}. ${(data.desc||"").replace(/\s+/g," ").trim().slice(0,280)}</p>
+    ${data.count?` with ${escapeHtml(String(data.count))} participants`:""}. ${escapeHtml(expandBrief(data.title, data.desc, data.count, "departmental quality activity"))}</p>
     <p class="doc-body">Entered in the IQAC activity register for AQAR compilation under Teaching-Learning / Extension / Student Support, as applicable.</p>
     ${signBlock("IQAC Coordinator","Dr. Debasis Pahi", COLLEGE.principalDesignation, COLLEGE.principal)}
     ${footNote()}</div>`;
@@ -643,7 +689,7 @@ async function generate(){
     }
     images=pendingImages.coord.slice();
     roles.forEach(r=>{
-      const html=buildCoordOfficial(title,date,desc,count,r,otherLabel);
+      const html=buildCoordOfficial(title,date,desc,count,r,otherLabel,images);
       htmlDrafts[r]=html; textDrafts[r]=stripToText(html);
     });
     entry={ kind:"coord", id: currentEditId||("event:"+Date.now()), title, date, desc, count, roles, otherLabel,
@@ -663,7 +709,7 @@ async function generate(){
       err.textContent="Department, title, date and description are required."; err.style.display="block"; return;
     }
     images=pendingImages.dept.slice();
-    const data={dept,type,title,date,count,resource,venue,desc,outcomes};
+    const data={dept,type,title,date,count,resource,venue,desc,outcomes,images};
     const main=buildDeptOfficial(data);
     htmlDrafts.dept_report=main; textDrafts.dept_report=stripToText(main);
     roles=["dept_report"];
@@ -714,7 +760,6 @@ function renderOutputs(entry){
     const label=r==="dept_report"
       ? `Department Report${entry.dept?` — ${entry.dept}`:""}`
       : (ROLE_META[r]?.label||r);
-    const photos=images.length?`<div class="out-photos">${images.map(s=>`<img src="${s}">`).join("")}</div>`:"";
     return `<div class="out-card">
       <div class="out-toolbar">
         <span class="out-name">${String(i).padStart(2,"0")} · ${escapeHtml(label)}</span>
@@ -723,7 +768,7 @@ function renderOutputs(entry){
           <button class="btn-ghost btn-print" type="button">Print / PDF</button>
         </div>
       </div>
-      <div class="out-body-wrap">${htmlDrafts[r]}${photos}</div>
+      <div class="out-body-wrap">${htmlDrafts[r]}</div>
     </div>`;
   }).join("");
   document.getElementById("output-area").innerHTML = cards ? `<div class="output-list">${cards}</div>` : `<div class="empty">No drafts.</div>`;
@@ -740,17 +785,56 @@ function renderOutputs(entry){
       const doc=btn.closest(".out-card").querySelector(".official-doc");
       if(!doc) return;
       const w=window.open("","_blank");
-      w.document.write(`<html><head><title>Print Report</title>
-        <style>body{margin:0;font-family:Georgia,serif;} .official-doc{padding:24px 32px;}
-        .lh-college{font-size:18px;font-weight:700;text-align:center;} .lh-affil,.lh-addr{text-align:center;font-size:11px;color:#444;}
-        .lh-top{border-bottom:2.5px solid #0F1B2D;padding-bottom:12px;} .lh-line2{border-bottom:1px solid #A13D2D;text-align:center;font-size:11px;color:#A13D2D;font-weight:600;padding-bottom:6px;margin-bottom:16px;}
-        .doc-title{text-align:center;font-size:15px;font-weight:700;text-decoration:underline;margin:14px 0;text-transform:uppercase;}
-        .doc-sec{font-weight:700;margin:14px 0 6px;border-bottom:1px solid #ddd;} .doc-meta td{padding:3px 6px;} .doc-meta td:first-child{width:140px;font-weight:600;}
-        .doc-naac{margin-top:12px;padding:8px;background:#f7f5f0;border-left:3px solid #A13D2D;font-size:12px;}
-        .doc-sign{margin-top:28px;display:flex;justify-content:space-between;} .doc-sign .role{margin-top:36px;font-size:12px;}
-        .doc-foot{margin-top:24px;border-top:1px solid #ccc;font-size:10px;color:#666;text-align:center;padding-top:8px;}
-        @media print{body{margin:0;}}</style></head><body>${doc.outerHTML}</body></html>`);
-      w.document.close(); w.focus(); setTimeout(()=>w.print(), 300);
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print Report — MDC Malkangiri</title>
+        <style>
+          @page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0; padding: 0;
+            font-family: "Times New Roman", Times, Georgia, serif;
+            font-size: 12pt; color: #1a1a1a;
+            line-height: 1.5;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .official-doc { padding: 0; max-width: 100%; }
+          .lh-college { font-size: 16pt; font-weight: 700; text-align: center; letter-spacing: 0.03em; color: #0F1B2D; text-transform: uppercase; }
+          .lh-affil, .lh-addr { text-align: center; font-size: 10pt; color: #333; margin-top: 2pt; line-height: 1.4; }
+          .lh-top { border-bottom: 2.5pt solid #0F1B2D; padding-bottom: 10pt; margin-bottom: 4pt; }
+          .lh-line2 { border-bottom: 1pt solid #A13D2D; text-align: center; font-size: 9pt; color: #A13D2D; font-weight: 600; padding-bottom: 6pt; margin-bottom: 14pt; letter-spacing: 0.04em; }
+          .doc-title { text-align: center; font-size: 13pt; font-weight: 700; text-decoration: underline; margin: 12pt 0 14pt; text-transform: uppercase; line-height: 1.4; }
+          .doc-sec { font-weight: 700; font-size: 12pt; margin: 14pt 0 6pt; border-bottom: 0.5pt solid #999; padding-bottom: 2pt; color: #0F1B2D; }
+          .doc-body, .doc-meta, p, li { line-height: 1.5; text-align: justify; font-size: 12pt; }
+          p { margin: 0.5em 0; }
+          .doc-meta table { width: 100%; border-collapse: collapse; font-size: 12pt; line-height: 1.5; }
+          .doc-meta td { padding: 3pt 6pt; vertical-align: top; }
+          .doc-meta td:first-child { width: 150px; font-weight: 600; }
+          .doc-list { margin: 6pt 0 6pt 18pt; padding: 0; }
+          .doc-list li { margin-bottom: 4pt; line-height: 1.5; }
+          .doc-naac { margin-top: 12pt; padding: 8pt 10pt; background: #f7f5f0; border-left: 3pt solid #A13D2D; font-size: 10pt; line-height: 1.45; }
+          .doc-sign { margin-top: 28pt; display: flex; justify-content: space-between; gap: 24pt; page-break-inside: avoid; }
+          .doc-sign .role { margin-top: 32pt; font-size: 11pt; line-height: 1.45; }
+          .doc-foot { margin-top: 20pt; border-top: 0.5pt solid #999; font-size: 9pt; color: #555; text-align: center; padding-top: 8pt; line-height: 1.4; }
+          .doc-photos { display: flex; flex-wrap: wrap; gap: 10pt; margin: 12pt 0; page-break-inside: avoid; }
+          .doc-photo { margin: 0; width: 48%; }
+          .doc-photo img { width: 100%; height: auto; max-height: 180pt; object-fit: cover; border: 0.5pt solid #999; display: block; }
+          @media print {
+            body { margin: 0; }
+            .doc-photo img { max-height: 160pt; }
+            a { color: inherit; text-decoration: none; }
+          }
+        </style></head><body>${doc.outerHTML}</body></html>`);
+      w.document.close();
+      // Wait for images to load before printing
+      const tryPrint = () => {
+        const imgs = w.document.images;
+        let pending = 0;
+        for(let i=0;i<imgs.length;i++){
+          if(!imgs[i].complete){ pending++; imgs[i].onload = imgs[i].onerror = () => { pending--; if(pending<=0) w.print(); }; }
+        }
+        if(pending===0) setTimeout(()=>w.print(), 200);
+      };
+      setTimeout(tryPrint, 250);
     });
   });
 }
