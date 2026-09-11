@@ -3,11 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>One Desk — Loading…</title>
-<meta http-equiv="refresh" content="0; url=https://cdn.jsdelivr.net/gh/mdcmkgiqac-agent/onedesk-mdc-malkangiri@main/app.html">
-<script>location.replace('app.html');</script>
+<title>One Desk — MDC Malkangiri</title>
+<style>body{font-family:system-ui,sans-serif;background:#ECE6D8;color:#23241F;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{text-align:center;padding:24px}.spin{width:28px;height:28px;border:3px solid #C9BFA6;border-top-color:#A13D2D;border-radius:50%;animation:s 0.8s linear infinite;margin:0 auto 14px}@keyframes s{to{transform:rotate(360deg)}}</style>
 </head>
-<body style="font-family:system-ui;padding:40px;text-align:center">
-<p>Opening <a href="app.html">One Desk</a>…</p>
+<body>
+<div class="box"><div class="spin"></div><div>Loading One Desk…</div></div>
+<script src="part0.js"></script>
+<script src="part1.js"></script>
+<script src="part2.js"></script>
+<script src="part3.js"></script>
+<script>
+(function(){
+  var parts = window.__OD_PARTS || [];
+  if(parts.length < 4){ document.body.innerHTML = '<p style="padding:40px;text-align:center">Failed to load app parts. Please refresh.</p>'; return; }
+  var html = parts.join('');
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
 </body>
 </html>
