@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Desk — Coordinator & Department Register | MDC Malkangiri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --paper:#ECE6D8; --paper-raised:#F5F0E4; --ink:#23241F; --ink-soft:#5B5748;
+    --line:#C9BFA6; --stamp:#A13D2D; --marigold:#C9861A; --success:#3F6B4B; --navy:#0F1B2D;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'IBM Plex Sans',-apple-system,sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5;}
+  .frame{max-width:1180px;margin:0 auto;padding:24px 16px 80px;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+  header .title{font-family:var(--serif);font-size:clamp(26px,5vw,34px);font-weight:700;}
+  header .sub{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  header .reg-no{font-family:var(--mono);font-size:11px;color:var(--stamp);text-align:right;line-height:1.4;}
+  .layout{display:grid;grid-template-columns:400px 1fr;gap:24px;}
+  @media (max-width:900px){.layout{grid-template-columns:1fr;}}
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:2px;padding:18px;}
+  .card h2{font-family:var(--serif);font-size:18px;margin:0 0 14px;font-weight:600;}
+  label{display:block;font-size:12.5px;color:var(--ink-soft);margin:12px 0 5px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text],input[type=date],input[type=number],textarea,select{
+    width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:9px 10px;
+  }
+  textarea{min-height:80px;resize:vertical;}
+  .checks{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:6px;}
+  .check-item{display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;}
+  .check-item input{width:15px;height:15px;}
+  button{font-family:var(--sans);font-weight:600;font-size:14px;border:none;border-radius:2px;cursor:pointer;padding:11px 18px;}
+  .btn-primary{background:var(--stamp);color:#fff;width:100%;margin-top:16px;}
+  .btn-primary:disabled{opacity:0.5;cursor:default;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-size:12px;padding:6px 10px;}
+  .btn-copy{background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-size:11.5px;padding:5px 9px;}
+  .btn-copy:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+  .btn-export{background:var(--success);color:#fff;}
+  .btn-mini{background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-size:11px;padding:4px 8px;}
+  .btn-mini.danger:hover{border-color:var(--stamp);color:var(--stamp);}
+  .tabs{display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--line);}
+  .tab{padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-soft);border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .tab.active{color:var(--stamp);border-bottom-color:var(--stamp);}
+  .panel{display:none;} .panel.active{display:block;}
+  .output-list{display:flex;flex-direction:column;gap:14px;}
+  .out-card{background:#fff;border:1px solid var(--line);border-radius:2px;overflow:hidden;}
+  .out-toolbar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--paper-raised);border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap;}
+  .out-name{font-family:var(--serif);font-weight:600;font-size:14px;}
+  .out-body-wrap{padding:0;}
+  /* Official letterhead report look */
+  .official-doc{
+    background:#fff;color:#1a1a1a;padding:28px 32px;font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.55;
+  }
+  .lh-top{text-align:center;border-bottom:2.5px solid #0F1B2D;padding-bottom:12px;margin-bottom:4px;}
+  .lh-college{font-size:18px;font-weight:700;letter-spacing:0.02em;color:#0F1B2D;text-transform:uppercase;}
+  .lh-affil{font-size:11.5px;color:#444;margin-top:2px;}
+  .lh-addr{font-size:11px;color:#555;margin-top:2px;}
+  .lh-line2{border-bottom:1px solid #A13D2D;margin-bottom:16px;padding-bottom:6px;text-align:center;font-size:11px;color:#A13D2D;font-weight:600;letter-spacing:0.04em;}
+  .doc-title{text-align:center;font-size:15px;font-weight:700;text-decoration:underline;margin:14px 0 16px;text-transform:uppercase;}
+  .doc-meta{margin-bottom:12px;}
+  .doc-meta table{width:100%;border-collapse:collapse;font-size:13px;}
+  .doc-meta td{padding:3px 6px;vertical-align:top;}
+  .doc-meta td:first-child{width:140px;font-weight:600;color:#333;}
+  .doc-sec{margin:14px 0 6px;font-weight:700;font-size:13.5px;color:#0F1B2D;border-bottom:1px solid #ddd;padding-bottom:2px;}
+  .doc-body{text-align:justify;margin:8px 0;}
+  .doc-list{margin:6px 0 6px 18px;padding:0;}
+  .doc-list li{margin-bottom:4px;}
+  .doc-sign{margin-top:28px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .doc-sign .block{min-width:180px;}
+  .doc-sign .role{font-size:12px;color:#444;margin-top:36px;}
+  .doc-foot{margin-top:24px;padding-top:10px;border-top:1px solid #ccc;font-size:10.5px;color:#666;text-align:center;}
+  .doc-naac{margin-top:12px;padding:8px 10px;background:#f7f5f0;border-left:3px solid #A13D2D;font-size:12px;}
+  .empty{text-align:center;padding:48px 16px;color:var(--ink-soft);font-size:14px;border:1px dashed var(--line);}
+  .loading{text-align:center;padding:36px;color:var(--ink-soft);font-style:italic;}
+  .register{margin-top:28px;}
+  .section-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+  .section-row h2,.register h2{font-family:var(--serif);font-size:20px;margin:0;}
+  .reg-row{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line);font-size:13.5px;gap:10px;flex-wrap:wrap;}
+  .reg-row:hover{background:var(--paper-raised);}
+  .reg-left{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;}
+  .reg-date{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);min-width:78px;}
+  .reg-tags{font-size:11px;color:var(--ink-soft);}
+  .reg-actions{display:flex;gap:6px;}
+  .err{color:var(--stamp);font-size:13px;margin-top:10px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:760px){.cal-grid{grid-template-columns:repeat(2,1fr);}}
+  .cal-month{background:var(--paper-raised);border:1px solid var(--line);padding:12px;min-height:88px;}
+  .cal-month .m-label{font-family:var(--serif);font-weight:600;font-size:13px;margin-bottom:6px;}
+  .cal-month.empty-month{opacity:0.55;}
+  .cal-event{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .cal-event b{color:var(--ink);font-weight:500;}
+  .cal-count{font-family:var(--mono);font-size:10.5px;color:var(--marigold);}
+  .export-card,.sync-card{background:var(--paper-raised);border:1px solid var(--line);padding:18px;margin-top:12px;}
+  .export-row,.sync-row,.backup-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .export-note{font-size:12.5px;color:var(--ink-soft);margin-top:10px;}
+  .stats-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .stat-chip{background:var(--paper-raised);border:1px solid var(--line);padding:7px 12px;font-size:12.5px;color:var(--ink-soft);}
+  .stat-chip b{color:var(--ink);font-family:var(--mono);margin-right:4px;}
+  .disclaimer{font-size:12px;color:var(--ink-soft);background:var(--paper-raised);border:1px dashed var(--line);padding:10px 14px;margin-top:12px;}
+  .file-label{font-size:12.5px;border:1px solid var(--line);padding:8px 12px;cursor:pointer;color:var(--ink-soft);}
+  .edit-banner{background:#FFF3CD;border:1px solid #E0C36B;padding:8px 12px;font-size:12.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .thumb{position:relative;width:56px;height:56px;}
+  .thumb img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);}
+  .thumb .rm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--stamp);color:#fff;border:none;font-size:10px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;}
+  .out-photos{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;padding:0 32px 20px;}
+  .out-photos img{width:72px;height:72px;object-fit:cover;border:1px solid #ccc;}
+  .sync-status{font-size:12px;margin-top:8px;}
+  .sync-status.ok{color:var(--success);} .sync-status.off{color:var(--ink-soft);}
+  .other-role-row{display:flex;gap:8px;margin-top:8px;align-items:center;}
+  .other-role-row input[type=text]{flex:1;}
+  .mode-toggle{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:12.5px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:500px){.grid-2{grid-template-columns:1fr;}}
+  details.help{margin-top:10px;font-size:12.5px;color:var(--ink-soft);}
+  details.help summary{cursor:pointer;color:var(--ink);}
+  .chip-dept{display:inline-block;background:#e8f0e9;color:#3F6B4B;font-size:11px;padding:2px 8px;border-radius:2px;margin-left:6px;}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <div>
+      <div class="title">One Desk</div>
+      <div class="sub">MDC Malkangiri · Coordinator roles + Department academic reports · NAAC-ready</div>
+    </div>
+    <div class="reg-no">Model Degree College, Malkangiri<br>Vikram Dev University, Odisha<br>Principal: Dr. Alok Kumar Patra<br>© Dr. Debasis Pahi</div>
+  </header>
+
+  <div class="layout">
+    <div class="card">
+      <div class="edit-banner" id="edit-banner" style="display:none;">
+        <span>Editing a saved entry.</span>
+        <button class="btn-mini" id="btn-cancel-edit" type="button">Cancel edit</button>
+      </div>
+
+      <div class="tabs">
+        <button type="button" class="tab active" data-tab="coord">Coordinator / Cells</button>
+        <button type="button" class="tab" data-tab="dept">Department Academic</button>
+      </div>
+
+      <!-- COORDINATOR PANEL -->
+      <div class="panel active" id="panel-coord">
+        <h2 style="margin-top:0;">Log a cell / committee event</h2>
+        <label>Event title *</label>
+        <input type="text" id="c-title" placeholder="e.g. Blood Donation Camp">
+        <label>Date *</label>
+        <input type="date" id="c-date">
+        <label>What happened *</label>
+        <textarea id="c-desc" placeholder="Brief description of the activity…"></textarea>
+        <label>Participants</label>
+        <input type="number" id="c-count" placeholder="e.g. 42" min="0">
+        <label>Photos (up to 4)</label>
+        <input type="file" id="c-images" accept="image/*" multiple>
+        <div id="c-previews" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;"></div>
+        <label>Roles this event serves</label>
+        <div class="checks" id="role-checks">
+          <label class="check-item"><input type="checkbox" value="nss" checked> NSS</label>
+          <label class="check-item"><input type="checkbox" value="yrc" checked> YRC</label>
+          <label class="check-item"><input type="checkbox" value="placement"> Placement</label>
+          <label class="check-item"><input type="checkbox" value="scholarship"> Scholarship</label>
+          <label class="check-item"><input type="checkbox" value="sports"> Sports &amp; Cultural</label>
+          <label class="check-item"><input type="checkbox" value="iqac"> IQAC</label>
+          <label class="check-item"><input type="checkbox" value="naac"> NAAC</label>
+          <label class="check-item"><input type="checkbox" value="website" checked> Website</label>
+          <label class="check-item"><input type="checkbox" value="social" checked> Social Media</label>
+        </div>
+        <label>Other role (optional)</label>
+        <div class="other-role-row">
+          <input type="checkbox" id="other-check" style="width:15px;height:15px;">
+          <input type="text" id="other-name" placeholder="e.g. Eco Club / Anti-Ragging">
+        </div>
+      </div>
+
+      <!-- DEPARTMENT PANEL -->
+      <div class="panel" id="panel-dept">
+        <h2 style="margin-top:0;">Log a departmental academic activity</h2>
+        <label>Department *</label>
+        <select id="d-dept">
+          <option value="">— Select department —</option>
+          <option>Anthropology</option><option>Botany</option><option>Chemistry</option>
+          <option>Commerce</option><option>Economics</option><option>Education</option>
+          <option>English</option><option>History</option><option>Mathematics</option>
+          <option>Odia</option><option>Physics</option><option>Political Science</option>
+          <option>Psychology</option><option>Sociology</option><option>Zoology</option>
+          <option>Other</option>
+        </select>
+        <label>Activity type *</label>
+        <select id="d-type">
+          <option value="seminar">Seminar</option>
+          <option value="workshop">Workshop</option>
+          <option value="guest_lecture">Guest Lecture</option>
+          <option value="field_visit">Field Visit</option>
+          <option value="industrial_visit">Industrial Visit</option>
+          <option value="internship">Internship / Project</option>
+          <option value="dept_meeting">Department Meeting</option>
+          <option value="extension">Extension / Outreach (Dept)</option>
+          <option value="other_academic">Other Academic Activity</option>
+        </select>
+        <label>Activity title *</label>
+        <input type="text" id="d-title" placeholder="e.g. National Seminar on Tribal Livelihoods">
+        <div class="grid-2">
+          <div><label>Date *</label><input type="date" id="d-date"></div>
+          <div><label>No. of participants</label><input type="number" id="d-count" min="0" placeholder="Students + faculty"></div>
+        </div>
+        <label>Resource person / Collaborating body (if any)</label>
+        <input type="text" id="d-resource" placeholder="Name, designation, organisation">
+        <label>Venue</label>
+        <input type="text" id="d-venue" placeholder="e.g. Seminar Hall / Field site / Industry name">
+        <label>Detailed description / proceedings *</label>
+        <textarea id="d-desc" placeholder="Objectives, what was done, key discussions, outcomes…"></textarea>
+        <label>Learning outcomes / impact (for NAAC)</label>
+        <textarea id="d-outcomes" placeholder="e.g. Students gained exposure to…; Linked to CO/PO…" style="min-height:60px;"></textarea>
+        <label>Photos (up to 4)</label>
+        <input type="file" id="d-images" accept="image/*" multiple>
+        <div id="d-previews" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;"></div>
+        <label class="check-item" style="margin-top:12px;"><input type="checkbox" id="d-also-iqac" checked> Also generate IQAC + NAAC evidence notes</label>
+      </div>
+
+      <div class="mode-toggle">
+        <label><input type="radio" name="draft-mode" value="template" checked> Official template (recommended)</label>
+        <label><input type="radio" name="draft-mode" value="api"> LLM polish (API key)</label>
+      </div>
+      <div id="api-key-row" style="display:none;">
+        <label>API key</label>
+        <input type="password" id="f-apikey" placeholder="xAI / OpenAI-compatible key">
+        <label>Endpoint</label>
+        <input type="text" id="f-endpoint" value="https://api.x.ai/v1/chat/completions">
+      </div>
+
+      <button class="btn-primary" id="btn-generate">Generate professional reports</button>
+      <div class="err" id="err" style="display:none;"></div>
+    </div>
+
+    <div>
+      <div id="output-area">
+        <div class="empty">Fill the form and generate. Reports appear here on <b>official MDC Malkangiri letterhead</b>, structured for NAAC/UGC filing.</div>
+      </div>
+      <div class="disclaimer">Reports use the college’s formal letterhead style. Verify names, dates, figures and sign before filing. Keep geo-tagged photos with the hard copy for Peer Team evidence.</div>
+    </div>
+  </div>
+
+  <div class="register">
+    <div class="section-row"><h2>Annual calendar</h2><select id="cal-year"></select></div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="register">
+    <div class="section-row"><h2>Year-end export</h2></div>
+    <div class="export-card">
+      <div class="export-row">
+        <select id="export-year"></select>
+        <button class="btn-primary btn-export" id="btn-export" style="margin-top:0;width:auto;">Download annual reports (ZIP)</button>
+      </div>
+      <div class="export-note">ZIP of letterheaded HTML reports by role/department for the selected April–March year.</div>
+      <div class="err" id="export-err" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="register">
+    <div class="section-row"><h2>Google Sheet sync</h2></div>
+    <div class="sync-card">
+      <div class="sync-row">
+        <input type="text" id="sheet-webhook" placeholder="Apps Script Web App URL" style="flex:1;min-width:200px;">
+        <button class="btn-ghost" id="btn-save-webhook" type="button">Save URL</button>
+        <button class="btn-ghost" id="btn-sync-all" type="button">Sync all now</button>
+      </div>
+      <div class="sync-status off" id="sync-status">Not connected</div>
+    </div>
+  </div>
+
+  <div class="register">
+    <div class="section-row"><h2>Past entries</h2></div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="search-row" style="margin-bottom:10px;"><input type="text" id="reg-search" placeholder="Search title, department, role…" style="max-width:320px;"></div>
+    <div id="register-list"><div class="empty">No entries yet.</div></div>
+    <div class="backup-row" style="margin-top:14px;">
+      <button class="btn-ghost" id="btn-backup" type="button">Download backup (JSON)</button>
+      <label class="file-label" for="file-restore">Restore from backup</label>
+      <input type="file" id="file-restore" accept="application/json" style="display:none;">
+    </div>
+    <div class="err" id="backup-err" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+const COLLEGE = {
+  name: "MODEL DEGREE COLLEGE, MALKANGIRI",
+  affil: "Affiliated to Vikram Dev University, Jeypore, Odisha",
+  addr: "Malkangiri District, Odisha",
+  principal: "Dr. Alok Kumar Patra",
+  principalDesignation: "Principal",
+  contact: "9668887492",
+  coordinator: "Dr. Debasis Pahi",
+  coordinatorDesignation: "Asst. Prof. (OES-I) & HoD, Commerce · IQAC Coordinator",
+  copyright: "© Dr. Debasis Pahi — One Desk Coordinator Register. All rights reserved."
+};
+
+const ROLE_META = {
+  nss:{label:"NSS Report"}, yrc:{label:"YRC Report"}, placement:{label:"Placement Cell Note"},
+  scholarship:{label:"Scholarship Cell Note"}, website:{label:"Website Update"}, social:{label:"Social Media Caption"},
+  sports:{label:"Sports & Cultural Note"}, iqac:{label:"IQAC Log Entry"}, naac:{label:"NAAC Evidence Note"},
+  other:{label:"Other Role Note"},
+  dept_report:{label:"Department Activity Report"},
+  seminar_report:{label:"Seminar / Workshop Report"}
+};
+
+const DEPT_TYPE_LABEL = {
+  seminar:"Seminar", workshop:"Workshop", guest_lecture:"Guest Lecture", field_visit:"Field Visit",
+  industrial_visit:"Industrial Visit", internship:"Internship / Student Project", dept_meeting:"Department Meeting",
+  extension:"Department Extension / Outreach", other_academic:"Academic Activity"
+};
+
+const STORAGE_KEY = "onedesk_entries_v2";
+const WEBHOOK_KEY = "onedesk_sheet_webhook";
+const APIKEY_KEY = "onedesk_api_key";
+const ENDPOINT_KEY = "onedesk_api_endpoint";
+
+let currentEditId = null;
+let pendingImages = {coord:[], dept:[]};
+let activeTab = "coord";
+let allEntriesCache = [];
+
+/* ---- tabs ---- */
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+    activeTab = t.dataset.tab;
+  });
+});
+
+/* ---- storage ---- */
+function loadRaw(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"); }catch(e){ return []; } }
+function saveRaw(a){ localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); }
+function getAllEntries(){ return loadRaw().sort((a,b)=>(b.date||"").localeCompare(a.date||"")); }
+function upsertEntry(e){ const a=loadRaw(); const i=a.findIndex(x=>x.id===e.id); if(i>=0)a[i]=e; else a.push(e); saveRaw(a); }
+function deleteEntry(id){ saveRaw(loadRaw().filter(e=>e.id!==id)); }
+
+/* ---- academic year ---- */
+function academicYearOf(dateStr){
+  if(!dateStr) return currentAcademicYear();
+  const d=new Date(dateStr); if(isNaN(d)) return currentAcademicYear();
+  const y=d.getFullYear(), m=d.getMonth();
+  return m>=3 ? `${y}-${y+1}` : `${y-1}-${y}`;
+}
+function currentAcademicYear(){ const n=new Date(), y=n.getFullYear(), m=n.getMonth(); return m>=3?`${y}-${y+1}`:`${y-1}-${y}`; }
+function academicYearBounds(ay){ const [a,b]=ay.split("-").map(Number); return {start:new Date(a,3,1), end:new Date(b,2,31,23,59,59)}; }
+function populateYearSelect(sel, entries){
+  const years=new Set([currentAcademicYear()]);
+  entries.forEach(e=>{ if(e.date) years.add(academicYearOf(e.date)); });
+  sel.innerHTML=[...years].sort().reverse().map(y=>`<option value="${y}">${y.replace("-","–")}</option>`).join("");
+}
+
+/* ---- images ---- */
+function resizeImageFile(file, maxW=900, q=0.6){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=e=>{ const img=new Image(); img.onload=()=>{ const s=Math.min(1,maxW/img.width); const c=document.createElement("canvas");
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      resolve(c.toDataURL("image/jpeg",q)); }; img.onerror=reject; img.src=e.target.result; };
+    r.onerror=reject; r.readAsDataURL(file);
+  });
+}
+function renderPreviews(key, wrapId){
+  const wrap=document.getElementById(wrapId);
+  wrap.innerHTML=pendingImages[key].map((src,i)=>`<div class="thumb"><img src="${src}"><button class="rm" data-k="${key}" data-i="${i}" type="button">×</button></div>`).join("");
+  wrap.querySelectorAll(".rm").forEach(b=>b.addEventListener("click",()=>{ pendingImages[b.dataset.k].splice(+b.dataset.i,1); renderPreviews(b.dataset.k, wrapId); }));
+}
+document.getElementById("c-images").addEventListener("change", async e=>{
+  for(const f of [...e.target.files].slice(0,4-pendingImages.coord.length)){ try{ pendingImages.coord.push(await resizeImageFile(f)); }catch(err){} }
+  pendingImages.coord=pendingImages.coord.slice(0,4); renderPreviews("coord","c-previews"); e.target.value="";
+});
+document.getElementById("d-images").addEventListener("change", async e=>{
+  for(const f of [...e.target.files].slice(0,4-pendingImages.dept.length)){ try{ pendingImages.dept.push(await resizeImageFile(f)); }catch(err){} }
+  pendingImages.dept=pendingImages.dept.slice(0,4); renderPreviews("dept","d-previews"); e.target.value="";
+});
+
+/* ---- helpers ---- */
+function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s||""; return d.innerHTML; }
+function fmtDate(ds){ if(!ds) return "—"; try{ return new Date(ds).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"}); }catch(e){ return ds; } }
+function letterheadHTML(){
+  return `<div class="lh-top">
+    <div class="lh-college">${COLLEGE.name}</div>
+    <div class="lh-affil">${COLLEGE.affil}</div>
+    <div class="lh-addr">${COLLEGE.addr}</div>
+  </div>
+  <div class="lh-line2">INTERNAL QUALITY ASSURANCE CELL (IQAC)  ·  ACADEMIC &amp; EXTENSION DOCUMENTATION</div>`;
+}
+function signBlock(leftRole, leftName, rightRole, rightName){
+  const leftLine = leftName
+    ? `<br><b>${escapeHtml(leftName)}</b>`
+    : `<br><span style="display:inline-block;min-width:160px;border-bottom:1px solid #333;margin-top:28px;">&nbsp;</span><br><span style="font-size:11px;color:#666;">(Signature)</span>`;
+  const rightLine = rightName
+    ? `<br><b>${escapeHtml(rightName)}</b>`
+    : `<br><span style="display:inline-block;min-width:160px;border-bottom:1px solid #333;margin-top:28px;">&nbsp;</span><br><span style="font-size:11px;color:#666;">(Signature)</span>`;
+  return `<div class="doc-sign">
+    <div class="block"><div class="role">${escapeHtml(leftRole||"")}${leftLine}</div></div>
+    <div class="block" style="text-align:right;"><div class="role">${escapeHtml(rightRole||COLLEGE.principalDesignation)}${rightLine}</div></div>
+  </div>`;
+}
+function coordinatorRoleLabel(role, otherLabel){
+  const map = {
+    nss: "Programme Officer, NSS",
+    yrc: "Programme Officer, YRC",
+    placement: "Coordinator, Career & Placement Cell",
+    scholarship: "Coordinator, Scholarship Cell",
+    sports: "Coordinator, Sports & Cultural",
+    iqac: "IQAC Coordinator",
+    naac: "IQAC Coordinator",
+    website: "Coordinator, Website & Social Media",
+    social: "Coordinator, Website & Social Media",
+    other: (otherLabel ? ("Coordinator, " + otherLabel) : "Coordinator")
+  };
+  return map[role] || "Coordinator";
+}
+function naacBox(criteriaText){
+  return `<div class="doc-naac"><b>NAAC mapping:</b> ${escapeHtml(criteriaText)}</div>`;
+}
+function footNote(){
+  return `<div class="doc-foot">Generated for institutional record · Model Degree College, Malkangiri · Verify and sign before filing · Retain photographs &amp; attendance with this report<br>${escapeHtml(COLLEGE.copyright)}</div>`;
+}
+
+/* ---- COORDINATOR TEMPLATES (letterhead) ---- */
+function buildCoordOfficial(title, date, desc, count, role, otherLabel){
+  const d=fmtDate(date);
+  const who=count?`${count} participants`:"students and staff";
+  const clean=(desc||"").replace(/\s+/g," ").trim();
+  let body="", criteria="", docTitle=ROLE_META[role]?.label||role;
+
+  if(role==="nss"){
+    docTitle="NSS ACTIVITY REPORT";
+    criteria="Criterion III (Extension Activities) · Criterion V (Student Support) · Criterion VII (Institutional Values)";
+    body=`<div class="doc-sec">1. Particulars of the Activity</div>
+      <div class="doc-meta"><table>
+        <tr><td>Title</td><td>${escapeHtml(title)}</td></tr>
+        <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+        <tr><td>Organised by</td><td>NSS Unit, Model Degree College, Malkangiri</td></tr>
+        <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+      </table></div>
+      <div class="doc-sec">2. Brief Report</div>
+      <p class="doc-body">${escapeHtml(clean)}</p>
+      <div class="doc-sec">3. Outcome</div>
+      <p class="doc-body">The activity strengthened community engagement, voluntary service and social responsibility among student volunteers, in alignment with the objectives of the National Service Scheme.</p>`;
+  } else if(role==="yrc"){
+    docTitle="YOUTH RED CROSS (YRC) ACTIVITY REPORT";
+    criteria="Criterion III (Extension) · Criterion V (Student Support) · Criterion VII (Human Values)";
+    body=`<div class="doc-meta"><table>
+      <tr><td>Title</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Unit</td><td>Youth Red Cross, MDC Malkangiri</td></tr>
+      <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <div class="doc-sec">Report</div>
+    <p class="doc-body">${escapeHtml(clean)}</p>
+    <p class="doc-body">The programme promoted humanitarian values, health awareness and the spirit of service consistent with YRC objectives.</p>`;
+  } else if(role==="iqac"){
+    docTitle="IQAC ACTIVITY LOG ENTRY";
+    criteria="Supports AQAR documentation across relevant criteria";
+    body=`<div class="doc-meta"><table>
+      <tr><td>Activity</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Scale</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <p class="doc-body">${escapeHtml(clean)}</p>
+    <p class="doc-body">Recorded as a quality-related institutional activity for IQAC minutes and Annual Quality Assurance Report (AQAR).</p>`;
+  } else if(role==="naac"){
+    docTitle="NAAC EVIDENCE NOTE";
+    criteria="To be filed under the applicable Key Indicator(s) with attendance, notice and photographs";
+    body=`<p class="doc-body">The activity <b>“${escapeHtml(title)}”</b> conducted on <b>${escapeHtml(d)}</b> is placed on record as documentary evidence for NAAC assessment. ${escapeHtml(clean)}</p>
+    <p class="doc-body"><b>Participants:</b> ${escapeHtml(who)}. Supporting documents (notice, attendance, geo-tagged photographs) are to be retained in the concerned criterion file.</p>`;
+  } else if(role==="placement"){
+    docTitle="CAREER & PLACEMENT CELL — ACTIVITY NOTE";
+    criteria="Criterion V — Student Support & Progression (Career Guidance / Placement)";
+    body=`<div class="doc-meta"><table>
+      <tr><td>Title</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <p class="doc-body">${escapeHtml(clean)}</p>`;
+  } else if(role==="scholarship"){
+    docTitle="SCHOLARSHIP CELL — ACTIVITY NOTE";
+    criteria="Criterion V — Student Support (Scholarships / Free-ships)";
+    body=`<p class="doc-body"><b>${escapeHtml(title)}</b> | ${escapeHtml(d)} | ${escapeHtml(who)}</p><p class="doc-body">${escapeHtml(clean)}</p>`;
+  } else if(role==="sports"){
+    docTitle="SPORTS & CULTURAL ACTIVITY REPORT";
+    criteria="Criterion V — Student Participation & Activities";
+    body=`<div class="doc-meta"><table>
+      <tr><td>Event</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <p class="doc-body">${escapeHtml(clean)}</p>`;
+  } else if(role==="website"){
+    docTitle="WEBSITE / PUBLIC COMMUNICATION NOTE";
+    criteria="Institutional transparency & stakeholder communication";
+    body=`<p class="doc-body">Model Degree College, Malkangiri organised <b>“${escapeHtml(title)}”</b> on ${escapeHtml(d)}. ${escapeHtml(clean)} ${escapeHtml(who.charAt(0).toUpperCase()+who.slice(1))} took part in the programme.</p>`;
+  } else if(role==="social"){
+    docTitle="SOCIAL MEDIA CAPTION (FOR OFFICIAL HANDLES)";
+    criteria="—";
+    body=`<p class="doc-body">Proud moment at MDC Malkangiri! “${escapeHtml(title)}” on ${escapeHtml(d)} saw ${escapeHtml(who)} come together. ${escapeHtml(clean.slice(0,160))}${clean.length>160?"…":""}<br><br>#MDCMalkangiri #IQAC #ViksitBharat #StudentLife</p>`;
+  } else {
+    const lab=otherLabel||"Committee";
+    docTitle=`${lab.toUpperCase()} — ACTIVITY NOTE`;
+    criteria="As applicable to the concerned cell / committee";
+    body=`<div class="doc-meta"><table>
+      <tr><td>Title</td><td>${escapeHtml(title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Participants</td><td>${escapeHtml(who)}</td></tr>
+    </table></div>
+    <p class="doc-body">${escapeHtml(clean)}</p>`;
+  }
+
+  return `<div class="official-doc">
+    ${letterheadHTML()}
+    <div class="doc-title">${docTitle}</div>
+    ${body}
+    ${criteria!=="—"?naacBox(criteria):""}
+    ${signBlock(coordinatorRoleLabel(role, otherLabel), COLLEGE.coordinator, COLLEGE.principalDesignation, COLLEGE.principal)}
+    ${footNote()}
+  </div>`;
+}
+
+/* ---- DEPARTMENT ACADEMIC REPORT (letterhead, NAAC structured) ---- */
+function buildDeptOfficial(data){
+  const d=fmtDate(data.date);
+  const typeLabel=DEPT_TYPE_LABEL[data.type]||"Academic Activity";
+  const who=data.count?`${data.count}`:"—";
+  const clean=(data.desc||"").replace(/\s+/g," ").trim();
+  const outcomes=(data.outcomes||"").replace(/\s+/g," ").trim();
+  const resource=data.resource||"—";
+  const venue=data.venue||"—";
+  const dept=data.dept||"Department";
+
+  let criteria="Criterion II (Teaching-Learning) · Criterion III (Research/Extension, if applicable) · Criterion V (Student Support)";
+  if(data.type==="field_visit"||data.type==="industrial_visit"||data.type==="internship")
+    criteria="Criterion I (Curriculum Enrichment / Experiential Learning) · Criterion II · Criterion V";
+  if(data.type==="extension")
+    criteria="Criterion III (Extension Activities) · Criterion VII";
+  if(data.type==="seminar"||data.type==="workshop"||data.type==="guest_lecture")
+    criteria="Criterion III (Seminars/Workshops) · Criterion II (Faculty & Student Enrichment) · Criterion V";
+
+  const html=`<div class="official-doc">
+    ${letterheadHTML()}
+    <div class="doc-title">DEPARTMENTAL ACTIVITY REPORT<br><span style="font-size:13px;font-weight:600;text-decoration:none;">(${escapeHtml(typeLabel)})</span></div>
+
+    <div class="doc-sec">1. General Information</div>
+    <div class="doc-meta"><table>
+      <tr><td>Department</td><td>${escapeHtml(dept)}</td></tr>
+      <tr><td>Type of Activity</td><td>${escapeHtml(typeLabel)}</td></tr>
+      <tr><td>Title / Theme</td><td>${escapeHtml(data.title)}</td></tr>
+      <tr><td>Date</td><td>${escapeHtml(d)}</td></tr>
+      <tr><td>Venue</td><td>${escapeHtml(venue)}</td></tr>
+      <tr><td>Resource Person / Partner</td><td>${escapeHtml(resource)}</td></tr>
+      <tr><td>No. of Participants</td><td>${escapeHtml(String(who))}</td></tr>
+    </table></div>
+
+    <div class="doc-sec">2. Objectives</div>
+    <p class="doc-body">The activity was organised to enrich curricular learning, expose students to practical / expert perspectives, and strengthen departmental academic culture in line with UGC and NAAC expectations for experiential and participatory learning.</p>
+
+    <div class="doc-sec">3. Proceedings / Description</div>
+    <p class="doc-body">${escapeHtml(clean)}</p>
+
+    <div class="doc-sec">4. Learning Outcomes &amp; Impact</div>
+    <p class="doc-body">${outcomes?escapeHtml(outcomes):"Students and faculty benefited through enhanced subject understanding, interaction with external expertise / field exposure, and improved academic engagement. Outcomes are linkable to relevant Course Outcomes (COs) of the programme."}</p>
+
+    <div class="doc-sec">5. Documents Retained</div>
+    <ul class="doc-list">
+      <li>Notice / circular and programme schedule</li>
+      <li>Attendance sheet of participants</li>
+      <li>Photographs (preferably geo-tagged) of the activity</li>
+      <li>Resource person’s brief profile / invitation letter (if applicable)</li>
+      <li>This report, duly signed by HoD and Principal</li>
+    </ul>
+
+    ${naacBox(criteria)}
+    ${signBlock("Head of the Department" + (dept ? " — " + dept : ""), "", COLLEGE.principalDesignation, COLLEGE.principal)}
+    ${footNote()}
+  </div>`;
+
+  return html;
+}
+
+function buildDeptIqacNaacNotes(data){
+  const d=fmtDate(data.date);
+  const typeLabel=DEPT_TYPE_LABEL[data.type]||"Activity";
+  const iqac=`<div class="official-doc">${letterheadHTML()}
+    <div class="doc-title">IQAC LOG ENTRY — DEPARTMENTAL ACTIVITY</div>
+    <p class="doc-body">The Department of <b>${escapeHtml(data.dept)}</b> conducted a <b>${escapeHtml(typeLabel)}</b> titled “${escapeHtml(data.title)}” on <b>${escapeHtml(d)}</b>
+    ${data.count?` with ${escapeHtml(String(data.count))} participants`:""}. ${(data.desc||"").replace(/\s+/g," ").trim().slice(0,280)}</p>
+    <p class="doc-body">Entered in the IQAC activity register for AQAR compilation under Teaching-Learning / Extension / Student Support, as applicable.</p>
+    ${signBlock("IQAC Coordinator","Dr. Debasis Pahi", COLLEGE.principalDesignation, COLLEGE.principal)}
+    ${footNote()}</div>`;
+
+  const naac=`<div class="official-doc">${letterheadHTML()}
+    <div class="doc-title">NAAC EVIDENCE NOTE — DEPARTMENTAL ACTIVITY</div>
+    <p class="doc-body">Evidence of <b>${escapeHtml(typeLabel)}</b>: “${escapeHtml(data.title)}” (Department of ${escapeHtml(data.dept)}, dated ${escapeHtml(d)}). 
+    This document, together with attendance and photographs, may be filed under the relevant NAAC Key Indicators for curricular enrichment, teaching-learning, seminar/workshop, or extension activity.</p>
+    ${naacBox("Criterion I / II / III / V — as applicable to activity type")}
+    ${signBlock("Head of the Department" + (data.dept ? " — " + data.dept : ""), "", COLLEGE.principalDesignation, COLLEGE.principal)}
+    ${footNote()}</div>`;
+
+  return { iqac, naac };
+}
+
+/* ---- plain text versions for copy/export drafts object ---- */
+function stripToText(html){
+  const tmp=document.createElement("div"); tmp.innerHTML=html;
+  return tmp.innerText.replace(/\n{3,}/g,"\n\n").trim();
+}
+
+/* ---- generate ---- */
+function getCoordRoles(){
+  const roles=[...document.querySelectorAll("#role-checks input:checked")].map(i=>i.value);
+  if(document.getElementById("other-check").checked && document.getElementById("other-name").value.trim())
+    roles.push("other");
+  return roles;
+}
+
+async function generate(){
+  const err=document.getElementById("err"); err.style.display="none";
+  const btn=document.getElementById("btn-generate");
+  const mode=document.querySelector('input[name="draft-mode"]:checked').value;
+
+  let entry, htmlDrafts={}, textDrafts={}, images=[], roles=[];
+
+  if(activeTab==="coord"){
+    const title=document.getElementById("c-title").value.trim();
+    const date=document.getElementById("c-date").value;
+    const desc=document.getElementById("c-desc").value.trim();
+    const count=document.getElementById("c-count").value.trim();
+    roles=getCoordRoles();
+    const otherLabel=document.getElementById("other-name").value.trim();
+    if(!title||!date||!desc||!roles.length){
+      err.textContent="Title, date, description and at least one role are required."; err.style.display="block"; return;
+    }
+    images=pendingImages.coord.slice();
+    roles.forEach(r=>{
+      const html=buildCoordOfficial(title,date,desc,count,r,otherLabel);
+      htmlDrafts[r]=html; textDrafts[r]=stripToText(html);
+    });
+    entry={ kind:"coord", id: currentEditId||("event:"+Date.now()), title, date, desc, count, roles, otherLabel,
+      drafts:textDrafts, htmlDrafts, images, updatedAt:new Date().toISOString() };
+  } else {
+    const dept=document.getElementById("d-dept").value;
+    const type=document.getElementById("d-type").value;
+    const title=document.getElementById("d-title").value.trim();
+    const date=document.getElementById("d-date").value;
+    const count=document.getElementById("d-count").value.trim();
+    const resource=document.getElementById("d-resource").value.trim();
+    const venue=document.getElementById("d-venue").value.trim();
+    const desc=document.getElementById("d-desc").value.trim();
+    const outcomes=document.getElementById("d-outcomes").value.trim();
+    const also=document.getElementById("d-also-iqac").checked;
+    if(!dept||!title||!date||!desc){
+      err.textContent="Department, title, date and description are required."; err.style.display="block"; return;
+    }
+    images=pendingImages.dept.slice();
+    const data={dept,type,title,date,count,resource,venue,desc,outcomes};
+    const main=buildDeptOfficial(data);
+    htmlDrafts.dept_report=main; textDrafts.dept_report=stripToText(main);
+    roles=["dept_report"];
+    if(also){
+      const notes=buildDeptIqacNaacNotes(data);
+      htmlDrafts.iqac=notes.iqac; textDrafts.iqac=stripToText(notes.iqac);
+      htmlDrafts.naac=notes.naac; textDrafts.naac=stripToText(notes.naac);
+      roles.push("iqac","naac");
+    }
+    entry={ kind:"dept", id: currentEditId||("event:"+Date.now()), title, date, desc, count, dept, type, resource, venue, outcomes,
+      roles, drafts:textDrafts, htmlDrafts, images, updatedAt:new Date().toISOString() };
+  }
+
+  // Optional LLM polish could enhance textDrafts; templates already official — skip API for structure fidelity unless requested
+  if(mode==="api"){
+    // Keep official HTML structure; API only optional for future text polish — show note
+    err.textContent="Official letterhead templates are used for NAAC compliance. API polish is optional and does not replace the structured format.";
+    err.style.display="block";
+  }
+
+  btn.disabled=true; btn.textContent="Generating…";
+  try{
+    renderOutputs(entry);
+    upsertEntry(entry);
+    syncEntryToSheet(entry);
+    if(currentEditId) cancelEdit();
+    else {
+      if(activeTab==="coord"){ pendingImages.coord=[]; renderPreviews("coord","c-previews"); }
+      else { pendingImages.dept=[]; renderPreviews("dept","d-previews"); }
+    }
+    await loadRegister();
+  }catch(ex){
+    console.error(ex);
+    err.textContent=ex.message||"Generation failed."; err.style.display="block";
+  }finally{
+    btn.disabled=false; btn.textContent="Generate professional reports";
+  }
+}
+
+function renderOutputs(entry){
+  const order=["dept_report","seminar_report","nss","yrc","placement","scholarship","sports","iqac","naac","website","social","other"];
+  const roles=entry.roles||[];
+  const htmlDrafts=entry.htmlDrafts||{};
+  const images=entry.images||[];
+  let i=0;
+  const cards=order.filter(r=>roles.includes(r)&&htmlDrafts[r]).map(r=>{
+    i++;
+    const label=r==="dept_report"
+      ? `Department Report${entry.dept?` — ${entry.dept}`:""}`
+      : (ROLE_META[r]?.label||r);
+    const photos=images.length?`<div class="out-photos">${images.map(s=>`<img src="${s}">`).join("")}</div>`:"";
+    return `<div class="out-card">
+      <div class="out-toolbar">
+        <span class="out-name">${String(i).padStart(2,"0")} · ${escapeHtml(label)}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-copy" data-text="${encodeURIComponent(entry.drafts?.[r]||"")}">Copy text</button>
+          <button class="btn-ghost btn-print" type="button">Print / PDF</button>
+        </div>
+      </div>
+      <div class="out-body-wrap">${htmlDrafts[r]}${photos}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("output-area").innerHTML = cards ? `<div class="output-list">${cards}</div>` : `<div class="empty">No drafts.</div>`;
+
+  document.querySelectorAll(".btn-copy").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      navigator.clipboard.writeText(decodeURIComponent(btn.dataset.text||"")).then(()=>{
+        const o=btn.textContent; btn.textContent="Copied"; setTimeout(()=>btn.textContent=o,1200);
+      });
+    });
+  });
+  document.querySelectorAll(".btn-print").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const doc=btn.closest(".out-card").querySelector(".official-doc");
+      if(!doc) return;
+      const w=window.open("","_blank");
+      w.document.write(`<html><head><title>Print Report</title>
+        <style>body{margin:0;font-family:Georgia,serif;} .official-doc{padding:24px 32px;}
+        .lh-college{font-size:18px;font-weight:700;text-align:center;} .lh-affil,.lh-addr{text-align:center;font-size:11px;color:#444;}
+        .lh-top{border-bottom:2.5px solid #0F1B2D;padding-bottom:12px;} .lh-line2{border-bottom:1px solid #A13D2D;text-align:center;font-size:11px;color:#A13D2D;font-weight:600;padding-bottom:6px;margin-bottom:16px;}
+        .doc-title{text-align:center;font-size:15px;font-weight:700;text-decoration:underline;margin:14px 0;text-transform:uppercase;}
+        .doc-sec{font-weight:700;margin:14px 0 6px;border-bottom:1px solid #ddd;} .doc-meta td{padding:3px 6px;} .doc-meta td:first-child{width:140px;font-weight:600;}
+        .doc-naac{margin-top:12px;padding:8px;background:#f7f5f0;border-left:3px solid #A13D2D;font-size:12px;}
+        .doc-sign{margin-top:28px;display:flex;justify-content:space-between;} .doc-sign .role{margin-top:36px;font-size:12px;}
+        .doc-foot{margin-top:24px;border-top:1px solid #ccc;font-size:10px;color:#666;text-align:center;padding-top:8px;}
+        @media print{body{margin:0;}}</style></head><body>${doc.outerHTML}</body></html>`);
+      w.document.close(); w.focus(); setTimeout(()=>w.print(), 300);
+    });
+  });
+}
+
+/* ---- register ---- */
+function renderStats(entries){
+  const ay=currentAcademicYear();
+  const thisYear=entries.filter(e=>academicYearOf(e.date)===ay).length;
+  const depts=entries.filter(e=>e.kind==="dept").length;
+  document.getElementById("stats-bar").innerHTML=`
+    <div class="stat-chip"><b>${entries.length}</b> total</div>
+    <div class="stat-chip"><b>${thisYear}</b> this AY</div>
+    <div class="stat-chip"><b>${depts}</b> departmental</div>`;
+}
+function renderRegisterRows(entries){
+  const box=document.getElementById("register-list");
+  if(!entries.length){ box.innerHTML='<div class="empty">No entries yet.</div>'; return; }
+  box.innerHTML=entries.map(e=>{
+    const tags=(e.roles||[]).map(r=>ROLE_META[r]?.label||r).join(", ");
+    const deptChip=e.dept?`<span class="chip-dept">${escapeHtml(e.dept)}</span>`:"";
+    return `<div class="reg-row" data-id="${escapeHtml(e.id)}">
+      <div class="reg-left">
+        <span class="reg-date">${escapeHtml(e.date||"—")}</span>
+        <span><b>${escapeHtml(e.title)}</b>${deptChip}<div class="reg-tags">${escapeHtml(tags)}</div></span>
+      </div>
+      <div class="reg-actions">
+        <button class="btn-mini btn-view" type="button">View</button>
+        <button class="btn-mini btn-edit" type="button">Edit</button>
+        <button class="btn-mini danger btn-del" type="button">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".reg-row").forEach(row=>{
+    const id=row.dataset.id; const entry=allEntriesCache.find(e=>e.id===id); if(!entry) return;
+    row.querySelector(".btn-view").onclick=()=>{ renderOutputs(entry); window.scrollTo({top:0,behavior:"smooth"}); };
+    row.querySelector(".btn-edit").onclick=()=>startEdit(entry);
+    row.querySelector(".btn-del").onclick=async()=>{ if(confirm("Delete this entry?")){ deleteEntry(id); await loadRegister(); } };
+  });
+}
+async function loadRegister(){
+  const entries=getAllEntries(); allEntriesCache=entries;
+  renderStats(entries);
+  const q=document.getElementById("reg-search").value.trim().toLowerCase();
+  const filtered=q?entries.filter(e=>{
+    return (e.title||"").toLowerCase().includes(q)||(e.dept||"").toLowerCase().includes(q)||
+      (e.roles||[]).some(r=>(ROLE_META[r]?.label||r).toLowerCase().includes(q));
+  }):entries;
+  renderRegisterRows(filtered);
+  refreshCalendarAndExport(entries);
+}
+function startEdit(entry){
+  currentEditId=entry.id;
+  document.getElementById("edit-banner").style.display="flex";
+  if(entry.kind==="dept"){
+    document.querySelector('.tab[data-tab="dept"]').click();
+    document.getElementById("d-dept").value=entry.dept||"";
+    document.getElementById("d-type").value=entry.type||"seminar";
+    document.getElementById("d-title").value=entry.title||"";
+    document.getElementById("d-date").value=entry.date||"";
+    document.getElementById("d-count").value=entry.count||"";
+    document.getElementById("d-resource").value=entry.resource||"";
+    document.getElementById("d-venue").value=entry.venue||"";
+    document.getElementById("d-desc").value=entry.desc||"";
+    document.getElementById("d-outcomes").value=entry.outcomes||"";
+    pendingImages.dept=(entry.images||[]).slice(); renderPreviews("dept","d-previews");
+  } else {
+    document.querySelector('.tab[data-tab="coord"]').click();
+    document.getElementById("c-title").value=entry.title||"";
+    document.getElementById("c-date").value=entry.date||"";
+    document.getElementById("c-desc").value=entry.desc||"";
+    document.getElementById("c-count").value=entry.count||"";
+    document.querySelectorAll("#role-checks input").forEach(cb=>{ cb.checked=(entry.roles||[]).includes(cb.value); });
+    if((entry.roles||[]).includes("other")){ document.getElementById("other-check").checked=true; document.getElementById("other-name").value=entry.otherLabel||""; }
+    pendingImages.coord=(entry.images||[]).slice(); renderPreviews("coord","c-previews");
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function cancelEdit(){
+  currentEditId=null; document.getElementById("edit-banner").style.display="none";
+  pendingImages={coord:[],dept:[]}; renderPreviews("coord","c-previews"); renderPreviews("dept","d-previews");
+}
+document.getElementById("btn-cancel-edit").onclick=cancelEdit;
+document.getElementById("reg-search").oninput=()=>loadRegister();
+
+/* ---- calendar / export ---- */
+function refreshCalendarAndExport(entries){
+  const cal=document.getElementById("cal-year"), exp=document.getElementById("export-year");
+  const pc=cal.value, pe=exp.value;
+  populateYearSelect(cal,entries); populateYearSelect(exp,entries);
+  if(pc) cal.value=pc; if(pe) exp.value=pe;
+  renderCalendar(entries, cal.value||currentAcademicYear());
+}
+function renderCalendar(entries, ay){
+  const grid=document.getElementById("cal-grid"); if(!ay){grid.innerHTML="";return;}
+  const {start}=academicYearBounds(ay);
+  const names=["April","May","June","July","August","September","October","November","December","January","February","March"];
+  const by=Array.from({length:12},()=>[]);
+  entries.forEach(e=>{
+    if(!e.date||academicYearOf(e.date)!==ay) return;
+    const d=new Date(e.date); if(isNaN(d)) return;
+    let i=d.getMonth()-3; if(i<0)i+=12; by[i].push(e);
+  });
+  grid.innerHTML=names.map((n,i)=>{
+    const label=`${n} ${start.getFullYear()+(i<9?0:1)}`;
+    if(!by[i].length) return `<div class="cal-month empty-month"><div class="m-label">${label}</div><div class="cal-event">No entries</div></div>`;
+    return `<div class="cal-month"><div class="m-label">${label} <span class="cal-count">· ${by[i].length}</span></div>${by[i].map(e=>`<div class="cal-event"><b>${escapeHtml(e.title)}</b></div>`).join("")}</div>`;
+  }).join("");
+}
+document.getElementById("cal-year").onchange=async()=>renderCalendar(getAllEntries(), document.getElementById("cal-year").value);
+
+document.getElementById("btn-export").onclick=async()=>{
+  const exportErr=document.getElementById("export-err"); exportErr.style.display="none";
+  const ay=document.getElementById("export-year").value; const btn=document.getElementById("btn-export");
+  try{
+    const {start,end}=academicYearBounds(ay);
+    const inRange=getAllEntries().filter(e=>{ const d=new Date(e.date); return e.date&&!isNaN(d)&&d>=start&&d<=end; })
+      .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    if(!inRange.length){ exportErr.textContent="No entries in this year."; exportErr.style.display="block"; return; }
+    btn.disabled=true; btn.textContent="Preparing…";
+    const zip=new JSZip(); const [ay1,ay2]=ay.split("-");
+    inRange.forEach((e,idx)=>{
+      Object.keys(e.htmlDrafts||{}).forEach(r=>{
+        const label=ROLE_META[r]?.label||r;
+        const photos=(e.images||[]).map(s=>`<img src="${s}" style="width:120px;height:120px;object-fit:cover;margin:4px;">`).join("");
+        const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${label}</title>
+          <style>body{font-family:Georgia,serif;max-width:800px;margin:24px auto;padding:0 16px;} img{border:1px solid #ccc;}</style></head>
+          <body>${e.htmlDrafts[r]}<div style="margin-top:12px;">${photos}</div></body></html>`;
+        zip.file(`${String(idx+1).padStart(2,"0")}_${(e.date||"").replace(/-/g,"")}_${label.replace(/[^a-z0-9]+/gi,"_")}.html`, html);
+      });
+    });
+    const blob=await zip.generateAsync({type:"blob"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download=`MDC_OneDesk_Reports_${ay1}-${ay2.slice(2)}.zip`; a.click();
+  }catch(ex){ exportErr.textContent="Export failed."; exportErr.style.display="block"; }
+  finally{ btn.disabled=false; btn.textContent="Download annual reports (ZIP)"; }
+};
+
+/* ---- backup ---- */
+document.getElementById("btn-backup").onclick=()=>{
+  const blob=new Blob([JSON.stringify(getAllEntries(),null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`OneDesk_Backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+};
+document.getElementById("file-restore").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const arr=JSON.parse(await f.text()); if(!Array.isArray(arr)) throw 0;
+    const by={}; loadRaw().forEach(x=>by[x.id]=x); arr.forEach(x=>{ if(x.title){ const id=x.id||("event:"+Date.now()); by[id]={...x,id}; }});
+    saveRaw(Object.values(by)); await loadRegister();
+  }catch(ex){ document.getElementById("backup-err").textContent="Invalid backup file."; document.getElementById("backup-err").style.display="block"; }
+  e.target.value="";
+};
+
+/* ---- sheet sync ---- */
+function updateSyncStatus(url){
+  const s=document.getElementById("sync-status");
+  if(url){ s.textContent="Connected — entries can sync to Google Sheet."; s.className="sync-status ok"; }
+  else { s.textContent="Not connected — paste Web App URL."; s.className="sync-status off"; }
+}
+async function syncEntryToSheet(entry){
+  const url=localStorage.getItem(WEBHOOK_KEY); if(!url) return;
+  try{
+    await fetch(url,{ method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({ title:entry.title, date:entry.date, count:entry.count, roles:entry.roles,
+        dept:entry.dept||"", type:entry.type||"", drafts:entry.drafts, photoCount:(entry.images||[]).length, kind:entry.kind||"coord" }) });
+  }catch(e){ console.error(e); }
+}
+document.getElementById("btn-save-webhook").onclick=()=>{
+  const url=document.getElementById("sheet-webhook").value.trim();
+  if(url) localStorage.setItem(WEBHOOK_KEY,url); else localStorage.removeItem(WEBHOOK_KEY);
+  updateSyncStatus(url);
+};
+document.getElementById("btn-sync-all").onclick=async()=>{
+  const url=localStorage.getItem(WEBHOOK_KEY); if(!url) return;
+  const btn=document.getElementById("btn-sync-all"); btn.disabled=true; btn.textContent="Syncing…";
+  for(const e of getAllEntries()) await syncEntryToSheet(e);
+  btn.disabled=false; btn.textContent="Sync all now";
+  document.getElementById("sync-status").textContent="Sync requested — check your Sheet.";
+};
+
+/* ---- auto-tick + mode ---- */
+["nss","yrc","placement","scholarship","sports"].forEach(val=>{
+  const box=document.querySelector(`#role-checks input[value="${val}"]`);
+  if(!box) return;
+  box.addEventListener("change",()=>{ if(box.checked){ document.querySelector('#role-checks input[value="iqac"]').checked=true;
+    document.querySelector('#role-checks input[value="naac"]').checked=true; }});
+});
+document.querySelectorAll('input[name="draft-mode"]').forEach(r=>{
+  r.addEventListener("change",()=>{ document.getElementById("api-key-row").style.display=
+    document.querySelector('input[name="draft-mode"]:checked').value==="api"?"block":"none"; });
+});
+
+document.getElementById("btn-generate").onclick=generate;
+
+(async()=>{
+  const url=localStorage.getItem(WEBHOOK_KEY)||"";
+  document.getElementById("sheet-webhook").value=url; updateSyncStatus(url);
+  await loadRegister();
+})();
+</script>
+</body>
+</html>
